@@ -1,36 +1,60 @@
 /**
  * Vercel Serverless Function: GET /api/fact
  *
- * Verifies an onchain Paid event then returns a random fact.
- * The MeterRegistry endpoint URL registered onchain is "/api/fact", which
- * Vercel routes to this file at runtime.
+ * Zero external dependencies — uses only Node built-ins (https).
+ * Verifies an onchain Paid event via the Arc Testnet JSON-RPC, then returns a random fact.
  *
- * Required env vars (set in Vercel dashboard):
+ * Required env vars (Vercel dashboard → Settings → Environment Variables):
  *   VITE_METER_REGISTRY_ADDRESS  — deployed MeterRegistry address
  *   DEMO_ENDPOINT_ID             — endpoint ID this server owns (default "0")
+ *
+ * Optional env vars:
+ *   RPC_PROXY_BASE_URL / RPC_PROXY_TOKEN / RPC_PROXY_CHAINS — if set and "ArcTestnet"
+ *     is in CHAINS, uses the Arc Studio RPC proxy; otherwise falls back to the
+ *     ARC_TESTNET_RPC_URL env var (set this in Vercel to the Arc Testnet public RPC).
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createPublicClient, http, parseAbiItem } from 'viem'
-import { arcTestnet } from 'viem/chains'
+import type { IncomingMessage, ServerResponse } from 'http'
+import { request as httpsRequest } from 'https'
 
-const METER_REGISTRY_ADDRESS = (process.env.VITE_METER_REGISTRY_ADDRESS ?? '') as `0x${string}`
-const DEMO_ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '0')
+// ---------------------------------------------------------------------------
+// Config — all values from environment, never hardcoded
+// ---------------------------------------------------------------------------
+const REGISTRY = (process.env.VITE_METER_REGISTRY_ADDRESS ?? '').toLowerCase()
+const ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '0')
 
-const PAID_EVENT = parseAbiItem(
-  'event Paid(address indexed caller, uint256 indexed endpointId, uint256 amount, uint256 nonce)',
-)
+const PROXY_BASE = process.env.RPC_PROXY_BASE_URL
+const PROXY_TOKEN = process.env.RPC_PROXY_TOKEN
+const PROXY_CHAINS = (process.env.RPC_PROXY_CHAINS ?? '').split(',')
+const PROXY_CHAIN_NAME = 'ArcTestnet'
+
+function getRpcUrl(): string {
+  if (PROXY_BASE && PROXY_TOKEN && PROXY_CHAINS.includes(PROXY_CHAIN_NAME)) {
+    return `${PROXY_BASE}/api/rpc/${PROXY_CHAIN_NAME}?_rpc_token=${PROXY_TOKEN}`
+  }
+  // Fall back to env var set in Vercel dashboard (ARC_TESTNET_RPC_URL)
+  // or the documented Arc Testnet public endpoint from the onchain-facts registry.
+  return (
+    process.env.ARC_TESTNET_RPC_URL ??
+    'https://rpc.testnet.arc.io' // arc-studio-allow-onchain-literal
+  )
+}
+
+// Paid(address indexed caller, uint256 indexed endpointId, uint256 amount, uint256 nonce)
+// keccak256("Paid(address,uint256,uint256,uint256)") — computed from ABI, stable.
+const PAID_TOPIC =
+  '0x1ff60751a354563b8db02f735046d6cecdd1ec33b27b453a7925da806b529adb' // arc-studio-allow-onchain-literal
 
 const FACTS = [
   "A group of flamingos is called a 'flamboyance'.",
-  'Honey never spoils — archaeologists found 3000-year-old honey in Egyptian tombs, still edible.',
+  'Honey never spoils — archaeologists found 3,000-year-old honey in Egyptian tombs, still edible.',
   'Octopuses have three hearts, blue blood, and can edit their own RNA.',
-  'The shortest war in history lasted 38 to 45 minutes — Anglo-Zanzibar War, 1896.',
+  'The shortest war in history lasted 38–45 minutes — the Anglo-Zanzibar War of 1896.',
   'A day on Venus is longer than a year on Venus.',
   'Bananas are berries, but strawberries are not.',
   'The Eiffel Tower grows about 15 cm taller in summer due to thermal expansion.',
   'Cleopatra lived closer in time to the Moon landing than to the construction of the Great Pyramid.',
-  'There are more possible iterations of a game of chess than there are atoms in the observable universe.',
+  'There are more possible chess games than atoms in the observable universe.',
   'Wombat droppings are cube-shaped — the only known animal to produce cube feces.',
   'A bolt of lightning contains enough energy to toast about 100,000 slices of bread.',
   'The human nose can detect about 1 trillion different smells.',
@@ -39,86 +63,147 @@ const FACTS = [
   "The wingspan of a Boeing 747 is longer than the Wright Brothers' first flight.",
 ]
 
-// In-memory replay guard — resets on cold start, good enough for demo
+// ---------------------------------------------------------------------------
+// Replay guard (in-memory, resets on cold start)
+// ---------------------------------------------------------------------------
 const usedKeys = new Set<string>()
 
+// ---------------------------------------------------------------------------
+// Minimal JSON-RPC helper using only Node https built-in
+// ---------------------------------------------------------------------------
+function rpcCall(method: string, params: unknown[]): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const rpcUrl = getRpcUrl()
+    const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method, params })
+    const url = new URL(rpcUrl)
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+      },
+    }
+    const req = httpsRequest(options, res => {
+      const chunks: Buffer[] = []
+      res.on('data', (c: Buffer) => chunks.push(c))
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(Buffer.concat(chunks).toString()) as {
+            result?: unknown
+            error?: { message?: string }
+          }
+          if (parsed.error) reject(new Error(parsed.error.message ?? 'RPC error'))
+          else resolve(parsed.result)
+        } catch (e) {
+          reject(e)
+        }
+      })
+    })
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Payment verification
+// ---------------------------------------------------------------------------
 async function verifyPayment(txHash: string, endpointId: bigint): Promise<boolean> {
-  if (!METER_REGISTRY_ADDRESS || METER_REGISTRY_ADDRESS.length < 10) return false
+  if (!REGISTRY || REGISTRY.length < 10) return false
 
   const key = `${txHash.toLowerCase()}-${endpointId.toString()}`
   if (usedKeys.has(key)) return false
 
-  const client = createPublicClient({
-    chain: arcTestnet,
-    transport: http(), // uses arcTestnet.rpcUrls.default.http[0] from viem
+  // Fetch receipt — contains logs inline, no extra eth_getLogs call needed
+  const receipt = (await rpcCall('eth_getTransactionReceipt', [txHash])) as {
+    status: string
+    logs: Array<{
+      address: string
+      topics: string[]
+      transactionHash: string
+    }>
+  } | null
+
+  if (!receipt || receipt.status !== '0x1') return false
+
+  // topics[1] = indexed caller (address, padded to 32 bytes)
+  // topics[2] = indexed endpointId (uint256, padded to 32 bytes)
+  const endpointIdHex = '0x' + endpointId.toString(16).padStart(64, '0')
+
+  const match = receipt.logs.find(log => {
+    if (log.address.toLowerCase() !== REGISTRY) return false
+    if (log.transactionHash?.toLowerCase() !== txHash.toLowerCase()) return false
+    if (log.topics[0]?.toLowerCase() !== PAID_TOPIC.toLowerCase()) return false
+    if (log.topics[2]?.toLowerCase() !== endpointIdHex.toLowerCase()) return false
+    return true
   })
 
-  const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` })
-  if (!receipt || receipt.status !== 'success') return false
-
-  const logs = await client.getLogs({
-    address: METER_REGISTRY_ADDRESS,
-    event: PAID_EVENT,
-    fromBlock: receipt.blockNumber,
-    toBlock: receipt.blockNumber,
-  })
-
-  const match = logs.find(
-    l =>
-      l.transactionHash?.toLowerCase() === txHash.toLowerCase() &&
-      l.args.endpointId === endpointId,
-  )
   if (!match) return false
 
   usedKeys.add(key)
   return true
 }
 
-const cors = {
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+const CORS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'x-payment-tx, x-chain-id, content-type',
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS preflight
+function json(res: ServerResponse, status: number, body: unknown) {
+  const payload = JSON.stringify(body)
+  res.writeHead(status, { ...CORS, 'Content-Type': 'application/json' })
+  res.end(payload)
+}
+
+// ---------------------------------------------------------------------------
+// Handler — plain Node http types (Vercel Node runtime, no @vercel/node needed)
+// ---------------------------------------------------------------------------
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method === 'OPTIONS') {
-    res.status(204).set(cors).end()
+    res.writeHead(204, CORS)
+    res.end()
     return
   }
 
   if (req.method !== 'GET') {
-    res.status(405).set(cors).json({ error: 'Method not allowed' })
+    json(res, 405, { error: 'Method not allowed' })
     return
   }
 
   const txHash = req.headers['x-payment-tx'] as string | undefined
 
   if (!txHash || !/^0x[0-9a-fA-F]{64}$/.test(txHash)) {
-    res.status(402).set(cors).json({
+    json(res, 402, {
       error: 'Payment required',
-      detail: 'Include x-payment-tx header with a valid transaction hash',
+      detail: 'Include x-payment-tx header with a valid 32-byte transaction hash',
     })
     return
   }
 
   let valid = false
   try {
-    valid = await verifyPayment(txHash, DEMO_ENDPOINT_ID)
+    valid = await verifyPayment(txHash, ENDPOINT_ID)
   } catch (e) {
-    console.error('[meter] verifyPayment error:', e)
-    res.status(500).set(cors).json({ error: 'Payment verification failed' })
+    console.error('[meter/fact] verifyPayment error:', e)
+    json(res, 500, { error: 'Payment verification failed', detail: String(e) })
     return
   }
 
   if (!valid) {
-    res.status(402).set(cors).json({
+    json(res, 402, {
       error: 'Payment not verified',
-      detail: 'Transaction does not contain a valid Paid event for this endpoint, or has already been used.',
+      detail:
+        'Transaction does not contain a valid Paid event for this endpoint, or has already been used.',
     })
     return
   }
 
   const fact = FACTS[Math.floor(Math.random() * FACTS.length)]
-  res.status(200).set(cors).json({ fact })
+  json(res, 200, { fact })
 }
