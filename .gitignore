@@ -1,0 +1,26 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+contracts/out/
+contracts/cache/
+
+# environment — NEVER commit secrets
+.env
+.env.local
+.env.*.local
+
+# Circle credentials
+.circle/
+*.recovery_file*
+recovery_file*
+
+# Foundry
+broadcast/
+cache/
+
+# misc
+.DS_Store
+*.log
+/tmp/
