@@ -8,7 +8,7 @@
     "build": "vite build",
     "server": "bun server/index.ts",
     "register:demo": "bun run ./scripts/register-demo-endpoint.ts",
-    "start": "bun run server & vite",
+    "start": "bun run build && NODE_ENV=production bun server/index.ts",
     "deploy:self": "bun run ./scripts/self-deploy.ts",
     "compass:deploy": "bun run ./scripts/compass-deploy.ts",
     "fetch:abi": "bun run ./scripts/fetch-abi.ts",

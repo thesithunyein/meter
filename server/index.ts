@@ -12,9 +12,11 @@
  */
 
 import { createPublicClient, http, parseAbiItem } from 'viem'
-import { arc } from 'viem/chains'
+import { arcTestnet } from 'viem/chains'
+import { join } from 'path'
+import { existsSync } from 'fs'
 
-const PORT = 3001
+const PORT = Number(process.env.PORT ?? 3001)
 
 const METER_REGISTRY_ADDRESS = (process.env.VITE_METER_REGISTRY_ADDRESS ?? '') as `0x${string}`
 const DEMO_ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '0')
@@ -23,16 +25,15 @@ const DEMO_ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '0')
 const proxyBase = process.env.RPC_PROXY_BASE_URL
 const proxyToken = process.env.RPC_PROXY_TOKEN
 const proxyChains = (process.env.RPC_PROXY_CHAINS ?? '').split(',')
-const ARC_PROXY_CHAIN = 'Arc'
+const ARC_PROXY_CHAIN = 'ArcTestnet'
 
 function buildRpcUrl(): string {
   if (proxyBase && proxyToken && proxyChains.includes(ARC_PROXY_CHAIN)) {
     return `${proxyBase}/api/rpc/${ARC_PROXY_CHAIN}?_rpc_token=${proxyToken}`
   }
-  // Fall back to public Arc mainnet RPC read from onchain-facts (may rate-limit under heavy load)
-  // arc.rpcUrls.default.http[0] is the canonical public endpoint from the viem chain definition
-  const fallback = arc.rpcUrls.default.http[0]
-  if (!fallback) throw new Error('No RPC URL available for Arc mainnet')
+  // Fall back to public Arc Testnet RPC from the viem chain definition
+  const fallback = arcTestnet.rpcUrls.default.http[0]
+  if (!fallback) throw new Error('No RPC URL available for Arc Testnet')
   return fallback
 }
 
@@ -44,7 +45,7 @@ let clientInstance: ReturnType<typeof createPublicClient> | null = null
 function getClient() {
   if (!clientInstance) {
     clientInstance = createPublicClient({
-      chain: arc,
+      chain: arcTestnet,
       transport: http(buildRpcUrl()),
     })
   }
@@ -109,6 +110,9 @@ async function verifyPayment(txHash: string, expectedEndpointId: bigint): Promis
   }
 }
 
+const DIST_DIR = join(import.meta.dir, '../dist')
+const IS_PROD = process.env.NODE_ENV === 'production' || existsSync(DIST_DIR + '/index.html')
+
 Bun.serve({
   port: PORT,
   async fetch(req) {
@@ -152,6 +156,15 @@ Bun.serve({
 
       const fact = FACTS[Math.floor(Math.random() * FACTS.length)]
       return Response.json({ fact }, { headers: corsHeaders })
+    }
+
+    // Serve built Vite app in production mode
+    if (IS_PROD) {
+      const filePath = join(DIST_DIR, url.pathname === '/' ? 'index.html' : url.pathname)
+      const file = Bun.file(filePath)
+      if (await file.exists()) return new Response(file)
+      // SPA fallback
+      return new Response(Bun.file(join(DIST_DIR, 'index.html')))
     }
 
     return new Response('Not found', { status: 404, headers: corsHeaders })

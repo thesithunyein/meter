@@ -261,3 +261,6 @@
 {"level":"warn","message":"ObjectMultiplex - orphaned data for stream \"metamask-multichain-provider\"","timestamp":1792773907937}
 {"level":"debug","message":"[vite] connected.","timestamp":1792774359512}
 {"level":"debug","message":"[vite] connected.","timestamp":1792813611328}
+{"level":"warn","message":"ObjectMultiplex - orphaned data for stream \"metamask-multichain-provider\"","timestamp":1792813667699}
+{"level":"warn","message":"ObjectMultiplex - orphaned data for stream \"metamask-multichain-provider\"","timestamp":1792813670987}
+{"level":"debug","message":"[vite] connected.","timestamp":1792816322420}
