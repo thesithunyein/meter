@@ -6,13 +6,19 @@ Pay-per-call API marketplace on Arc mainnet. Providers register HTTP endpoints w
 
 ---
 
+## Deployments
+- **Live app**: https://getmeter.vercel.app
+- **GitHub**: https://github.com/thesithunyein/meter
+
 ## Contract
 - **Name**: MeterRegistry
 - **Source**: `contracts/MeterRegistry.sol`
 - **Deploy script**: `contracts/script/DeployMeterRegistry.s.sol:DeployMeterRegistry`
 - **Network**: Arc mainnet (chainId 5042)
 - **USDC**: `0x3600000000000000000000000000000000000000` (6 decimals, from onchain-facts)
-- **Deployed address**: NOT YET DEPLOYED — user deploys from their own wallet. After deploy, set `VITE_METER_REGISTRY_ADDRESS` in `.env`.
+- **Deployed address (mainnet)**: `0x423B8701Da3a251a3A3fc2d241b71e8d05744C91`
+- **Demo endpoint**: ID `1`, name `random fact`, price `0.01 USDC`, URL `/api/fact`
+- **Arc Testnet address**: `0x63d52ea2f47b2db6edba7bb6f33c5abc1e81d2f9` (chain 5042002)
 
 ## App Structure
 - `src/components/PublicPage.tsx` — browse all endpoints, pay per call, see response
