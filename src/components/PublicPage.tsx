@@ -135,6 +135,19 @@ function EndpointCard({ id }: { id: bigint }) {
   const [, name, url, price, active] = data
   const formattedPrice = Amount.fromRaw(price, 6).toFixed(4)
 
+  // Parse fact text from JSON response if possible
+  function parseResponse(raw: string): string {
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown>
+      if (typeof parsed.fact === 'string') return parsed.fact
+      if (typeof parsed.result === 'string') return parsed.result
+      if (typeof parsed.message === 'string') return parsed.message
+    } catch {
+      // not JSON — return as-is
+    }
+    return raw
+  }
+
   return (
     <div className="bg-[var(--surface)] backdrop-blur-sm border border-[var(--border)] rounded-2xl p-5 space-y-3">
       <div className="flex items-start justify-between gap-3">
@@ -157,9 +170,9 @@ function EndpointCard({ id }: { id: bigint }) {
             <CheckCircle size={14} />
             <span className="text-xs font-semibold">Payment confirmed. Endpoint response:</span>
           </div>
-          <pre className="text-xs text-[var(--ink-2)] whitespace-pre-wrap break-all font-mono max-h-32 overflow-y-auto">
-            {status.response}
-          </pre>
+          <p className="text-sm text-[var(--ink)] leading-relaxed">
+            {parseResponse(status.response)}
+          </p>
           <a
             href={buildTxExplorerUrl(TARGET_CHAIN_ID, status.hash)}
             target="_blank"
@@ -180,13 +193,15 @@ function EndpointCard({ id }: { id: bigint }) {
 
       <button
         onClick={
-          status.phase === 'done' || status.phase === 'error'
-            ? () => setStatus({ phase: 'idle' })
-            : () => void handleCall()
+          !isConnected
+            ? () => toast.info('Connect your wallet to call this endpoint')
+            : status.phase === 'done' || status.phase === 'error'
+              ? () => setStatus({ phase: 'idle' })
+              : () => void handleCall()
         }
         disabled={
           !active ||
-          (status.phase !== 'idle' && status.phase !== 'done' && status.phase !== 'error')
+          (isConnected && status.phase !== 'idle' && status.phase !== 'done' && status.phase !== 'error')
         }
         className="w-full py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--accent-hover)] transition-colors"
       >
@@ -196,7 +211,8 @@ function EndpointCard({ id }: { id: bigint }) {
         {status.phase === 'calling' && <><Loader2 size={14} className="animate-spin" /> Calling endpoint...</>}
         {status.phase === 'done' && <><CheckCircle size={14} /> Try again</>}
         {status.phase === 'error' && <><AlertCircle size={14} /> Retry</>}
-        {status.phase === 'idle' && (
+        {!isConnected && active && <><Zap size={14} /> Connect wallet to call</>}
+        {isConnected && status.phase === 'idle' && (
           active
             ? <><Zap size={14} /> Call for {formattedPrice} USDC</>
             : 'Inactive'
@@ -221,11 +237,16 @@ export default function PublicPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-[var(--ink)] display">All Endpoints</h2>
-        <span className="text-xs text-[var(--muted)] tabular-nums bg-[var(--surface-muted)] px-2.5 py-1 rounded-full">
-          {ids.length} registered
-        </span>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[var(--ink)] display">All Endpoints</h2>
+          <span className="text-xs text-[var(--muted)] tabular-nums bg-[var(--surface-muted)] px-2.5 py-1 rounded-full">
+            {ids.length} registered
+          </span>
+        </div>
+        <p className="text-sm text-[var(--muted)]">
+          Pay USDC per API call. Any endpoint, any price, settled onchain.
+        </p>
       </div>
 
       {!IS_CONTRACT_DEPLOYED && (
@@ -237,7 +258,15 @@ export default function PublicPage() {
         </div>
       )}
 
-      {ids.length === 0 && IS_CONTRACT_DEPLOYED && (
+      {endpointCount === undefined && IS_CONTRACT_DEPLOYED && (
+        <div className="space-y-3">
+          {([0, 1] as const).map(i => (
+            <div key={i} className="h-24 rounded-2xl bg-[var(--surface-muted)] animate-pulse" />
+          ))}
+        </div>
+      )}
+
+      {endpointCount !== undefined && ids.length === 0 && IS_CONTRACT_DEPLOYED && (
         <div className="text-center py-12 text-[var(--muted)] text-sm">
           No endpoints registered yet.
         </div>

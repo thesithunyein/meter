@@ -141,8 +141,14 @@ export default function LiveFeed() {
       )}
 
       {!loading && events.length === 0 && IS_CONTRACT_DEPLOYED && (
-        <div className="text-center py-12 text-[var(--muted)] text-sm">
-          No payments yet. Be the first caller.
+        <div className="text-center py-12 space-y-2">
+          <div className="flex items-center justify-center gap-1.5 text-[var(--success)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+            <span className="text-xs font-medium">Watching for payments...</span>
+          </div>
+          <p className="text-sm text-[var(--muted)]">
+            Waiting for the first onchain payment. Make a call on the Endpoints tab to appear here.
+          </p>
         </div>
       )}
 
