@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useSwitchChain } from 'wagmi'
-import { ConnectKitButton } from 'connectkit'
 import { Target, Plus, ExternalLink, CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { METER_REGISTRY_ADDRESS, METER_REGISTRY_ABI, IS_CONTRACT_DEPLOYED } from '@/contracts/meter-registry'
@@ -117,12 +116,9 @@ export default function ProviderPage() {
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Target size={18} style={{ color: 'var(--accent)' }} />
-          <h2 className="text-lg font-semibold display" style={{ color: 'var(--ink)' }}>My Endpoints</h2>
-        </div>
-        <ConnectKitButton />
+      <div className="flex items-center gap-2">
+        <Target size={18} style={{ color: 'var(--accent)' }} />
+        <h2 className="text-lg font-semibold display" style={{ color: 'var(--ink)' }}>My Endpoints</h2>
       </div>
 
       {!IS_CONTRACT_DEPLOYED && (
