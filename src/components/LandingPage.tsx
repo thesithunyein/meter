@@ -73,6 +73,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
     <div>
       {/* ── CTA row ── */}
       <section className="max-w-5xl mx-auto px-6 pt-16 pb-20 flex flex-col sm:flex-row gap-4">
+        {/* Get Started — primary */}
         <button
           onClick={() => onNavigate('public')}
           className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
@@ -82,10 +83,11 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             boxShadow: '0 0 20px rgba(56,189,248,0.35)',
           }}
         >
-          <Globe size={15} /> Browse Endpoints
+          <Zap size={15} /> Get Started
         </button>
+        {/* How It Works — scrolls down */}
         <button
-          onClick={() => onNavigate('provider')}
+          onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
           className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
           style={{
             background: 'rgba(172,198,233,0.08)',
@@ -93,7 +95,19 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
             color: 'var(--ink)',
           }}
         >
-          <Code2 size={15} /> Register an API
+          <ChevronDown size={15} /> How It Works
+        </button>
+        {/* Browse Endpoints — glass */}
+        <button
+          onClick={() => onNavigate('public')}
+          className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(172,198,233,0.15)',
+            color: 'var(--subtle)',
+          }}
+        >
+          <Globe size={15} /> Browse Endpoints
         </button>
       </section>
 
@@ -128,7 +142,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       </section>
 
       {/* ── How it works ── */}
-      <section className="py-24">
+      <section id="how-it-works" className="py-24">
         <div className="max-w-5xl mx-auto px-6">
           <p className="text-xs font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--subtle)' }}>
             How it works

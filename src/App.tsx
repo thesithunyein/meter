@@ -95,42 +95,44 @@ export default function App() {
         )}
       </div>
 
-      {/* ── Sticky tab bar ── */}
-      <div
-        className="sticky top-0 z-20 backdrop-blur-xl"
-        style={{
-          background: 'rgba(8,14,26,0.80)',
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="flex gap-1 py-2">
-            {TABS.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                style={
-                  tab === t.id
-                    ? {
-                        background: 'rgba(172,198,233,0.15)',
-                        color: 'var(--accent)',
-                        border: '1px solid rgba(172,198,233,0.20)',
-                      }
-                    : {
-                        color: 'var(--subtle)',
-                        background: 'transparent',
-                        border: '1px solid transparent',
-                      }
-                }
-              >
-                {t.icon}
-                {t.label}
-              </button>
-            ))}
+      {/* ── Sticky tab bar — hidden on home ── */}
+      {tab !== 'home' && (
+        <div
+          className="sticky top-0 z-20 backdrop-blur-xl"
+          style={{
+            background: 'rgba(8,14,26,0.80)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="flex gap-1 py-2">
+              {TABS.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                  style={
+                    tab === t.id
+                      ? {
+                          background: 'rgba(172,198,233,0.15)',
+                          color: 'var(--accent)',
+                          border: '1px solid rgba(172,198,233,0.20)',
+                        }
+                      : {
+                          color: 'var(--subtle)',
+                          background: 'transparent',
+                          border: '1px solid transparent',
+                        }
+                  }
+                >
+                  {t.icon}
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ── Page content ── */}
       <main>
