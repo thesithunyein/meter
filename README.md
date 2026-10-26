@@ -1,18 +1,6 @@
 <div align="center">
 
-<svg width="120" height="120" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="mg-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#5B8DEF"/>
-      <stop offset="50%" stop-color="#38BDF8"/>
-      <stop offset="100%" stop-color="#22D3EE"/>
-    </linearGradient>
-  </defs>
-  <path d="M 6 34 L 6 10 Q 6 6 10 6 L 12 6 L 20 22 L 28 6 L 30 6 Q 34 6 34 10 L 34 34"
-    stroke="url(#mg-grad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 10 34 L 10 13 L 20 27 L 30 13 L 30 34"
-    stroke="url(#mg-grad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.45"/>
-</svg>
+<img src="public/logo.svg" alt="Meter" width="120" />
 
 # Meter
 
