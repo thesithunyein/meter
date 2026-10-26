@@ -4,6 +4,7 @@ import { Globe, Gauge, Activity, Zap } from 'lucide-react'
 import ProviderPage from './components/ProviderPage'
 import PublicPage from './components/PublicPage'
 import LiveFeed from './components/LiveFeed'
+import MeterLogo from './components/MeterLogo'
 
 type Tab = 'public' | 'provider' | 'feed'
 
@@ -35,17 +36,7 @@ export default function App() {
 
         {/* Nav inside hero */}
         <div className="relative z-10 max-w-5xl mx-auto px-6 pt-5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'rgba(172,198,233,0.18)', border: '1px solid rgba(172,198,233,0.25)' }}
-            >
-              <Gauge size={15} style={{ color: 'var(--accent)' }} />
-            </div>
-            <span className="text-base font-bold display" style={{ color: 'var(--ink)' }}>
-              Meter
-            </span>
-          </div>
+          <MeterLogo size={32} variant="full" />
           <ConnectKitButton />
         </div>
 
