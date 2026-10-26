@@ -6,6 +6,7 @@ import PublicPage from './components/PublicPage'
 import LiveFeed from './components/LiveFeed'
 import LandingPage from './components/LandingPage'
 import MeterLogo from './components/MeterLogo'
+import HeroCard from './components/HeroCard'
 
 type Tab = 'home' | 'public' | 'provider' | 'feed'
 
@@ -25,7 +26,7 @@ export default function App() {
   return (
     <div className="min-h-dvh" style={{ background: 'var(--bg)' }}>
       {/* ── Video hero ── */}
-      <div className="video-hero" style={{ height: tab === 'home' ? '600px' : '320px' }}>
+      <div className="video-hero" style={{ height: tab === 'home' ? '640px' : '320px' }}>
         <video
           src={VIDEO_URL}
           autoPlay
@@ -46,71 +47,67 @@ export default function App() {
 
         {/* Hero copy — only on home */}
         {tab === 'home' && (
-          <div className="relative z-10 max-w-5xl mx-auto px-6 pt-16">
-            <div className="inline-flex items-center gap-2 mb-5">
-              <span
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                style={{
-                  background: 'rgba(172,198,233,0.12)',
-                  border: '1px solid rgba(172,198,233,0.25)',
-                  color: 'var(--accent)',
-                }}
+          <div className="relative z-10 max-w-5xl mx-auto px-6 pt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            {/* Left: copy + CTAs */}
+            <div>
+              <div className="inline-flex items-center gap-2 mb-5">
+                <span
+                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{
+                    background: 'rgba(172,198,233,0.12)',
+                    border: '1px solid rgba(172,198,233,0.25)',
+                    color: 'var(--accent)',
+                  }}
+                >
+                  <Zap size={11} />
+                  Onchain · Arc Mainnet
+                </span>
+              </div>
+
+              <h1
+                className="display text-5xl font-bold leading-none tracking-tight mb-4"
+                style={{ color: 'var(--ink)', letterSpacing: '-0.03em' }}
               >
-                <Zap size={11} />
-                Onchain · Arc Mainnet
-              </span>
+                Pay-per-Call
+                <br />
+                <span style={{ color: 'var(--accent)' }}>API Gateway</span>
+              </h1>
+
+              <p className="text-base max-w-sm mb-8" style={{ color: 'var(--muted)' }}>
+                Any endpoint, any price, settled onchain with USDC.
+                <br />
+                The contract is the auth layer.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setTab('public')}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+                  style={{
+                    background: 'linear-gradient(135deg, #5B8DEF 0%, #38BDF8 60%, #22D3EE 100%)',
+                    color: '#080e1a',
+                    boxShadow: '0 0 20px rgba(56,189,248,0.35)',
+                  }}
+                >
+                  <Zap size={14} /> Get Started
+                </button>
+                <button
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
+                  style={{
+                    background: 'rgba(172,198,233,0.08)',
+                    border: '1px solid rgba(172,198,233,0.22)',
+                    color: 'var(--ink)',
+                  }}
+                >
+                  <ChevronDown size={14} /> How It Works
+                </button>
+              </div>
             </div>
 
-            <h1
-              className="display text-5xl font-bold leading-none tracking-tight mb-4"
-              style={{ color: 'var(--ink)', letterSpacing: '-0.03em' }}
-            >
-              Pay-per-Call
-              <br />
-              <span style={{ color: 'var(--accent)' }}>API Gateway</span>
-            </h1>
-
-            <p className="text-base max-w-sm mb-8" style={{ color: 'var(--muted)' }}>
-              Any endpoint, any price, settled onchain with USDC.
-              <br />
-              The contract is the auth layer.
-            </p>
-
-            {/* CTA buttons — directly under subline */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={() => setTab('public')}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-                style={{
-                  background: 'linear-gradient(135deg, #5B8DEF 0%, #38BDF8 60%, #22D3EE 100%)',
-                  color: '#080e1a',
-                  boxShadow: '0 0 20px rgba(56,189,248,0.35)',
-                }}
-              >
-                <Zap size={14} /> Get Started
-              </button>
-              <button
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
-                style={{
-                  background: 'rgba(172,198,233,0.08)',
-                  border: '1px solid rgba(172,198,233,0.22)',
-                  color: 'var(--ink)',
-                }}
-              >
-                <ChevronDown size={14} /> How It Works
-              </button>
-              <button
-                onClick={() => setTab('public')}
-                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-70 active:scale-95"
-                style={{
-                  background: 'transparent',
-                  border: '1px solid rgba(172,198,233,0.15)',
-                  color: 'var(--subtle)',
-                }}
-              >
-                <Globe size={14} /> Browse Endpoints
-              </button>
+            {/* Right: 3D floating card */}
+            <div className="hidden md:block">
+              <HeroCard />
             </div>
           </div>
         )}
