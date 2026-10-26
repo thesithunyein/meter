@@ -8,32 +8,32 @@
  *   3. Returns a random fact on success, 402 on missing/invalid payment.
  *
  * Run: bun server/index.ts
- * Required env: VITE_METER_REGISTRY_ADDRESS, DEMO_ENDPOINT_ID (default 0)
+ * Required env: VITE_METER_REGISTRY_ADDRESS, DEMO_ENDPOINT_ID (default 1)
  */
 
 import { createPublicClient, http, parseAbiItem } from 'viem'
-import { arcTestnet } from 'viem/chains'
+import { arc } from 'viem/chains'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
 const PORT = Number(process.env.PORT ?? 3001)
 
 const METER_REGISTRY_ADDRESS = (process.env.VITE_METER_REGISTRY_ADDRESS ?? '') as `0x${string}`
-const DEMO_ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '0')
+const DEMO_ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '1')
 
 // Resolve RPC: prefer the Arc Studio proxy, fall back to the public Arc mainnet RPC
 const proxyBase = process.env.RPC_PROXY_BASE_URL
 const proxyToken = process.env.RPC_PROXY_TOKEN
 const proxyChains = (process.env.RPC_PROXY_CHAINS ?? '').split(',')
-const ARC_PROXY_CHAIN = 'ArcTestnet'
+const ARC_PROXY_CHAIN = 'Arc'
 
 function buildRpcUrl(): string {
   if (proxyBase && proxyToken && proxyChains.includes(ARC_PROXY_CHAIN)) {
     return `${proxyBase}/api/rpc/${ARC_PROXY_CHAIN}?_rpc_token=${proxyToken}`
   }
-  // Fall back to public Arc Testnet RPC from the viem chain definition
-  const fallback = arcTestnet.rpcUrls.default.http[0]
-  if (!fallback) throw new Error('No RPC URL available for Arc Testnet')
+  // Fall back to public Arc mainnet RPC from the viem chain definition
+  const fallback = arc.rpcUrls.default.http[0]
+  if (!fallback) throw new Error('No RPC URL available for Arc mainnet')
   return fallback
 }
 
@@ -45,7 +45,7 @@ let clientInstance: ReturnType<typeof createPublicClient> | null = null
 function getClient() {
   if (!clientInstance) {
     clientInstance = createPublicClient({
-      chain: arcTestnet,
+      chain: arc,
       transport: http(buildRpcUrl()),
     })
   }

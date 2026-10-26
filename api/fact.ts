@@ -2,16 +2,16 @@
  * Vercel Serverless Function: GET /api/fact
  *
  * Zero external dependencies — uses only Node built-ins (https).
- * Verifies an onchain Paid event via the Arc Testnet JSON-RPC, then returns a random fact.
+ * Verifies an onchain Paid event via the Arc Mainnet JSON-RPC, then returns a random fact.
  *
  * Required env vars (Vercel dashboard → Settings → Environment Variables):
- *   VITE_METER_REGISTRY_ADDRESS  — deployed MeterRegistry address
- *   DEMO_ENDPOINT_ID             — endpoint ID this server owns (default "0")
+ *   VITE_METER_REGISTRY_ADDRESS  — deployed MeterRegistry address on Arc mainnet
+ *   DEMO_ENDPOINT_ID             — endpoint ID this server owns (default "1")
  *
  * Optional env vars:
- *   RPC_PROXY_BASE_URL / RPC_PROXY_TOKEN / RPC_PROXY_CHAINS — if set and "ArcTestnet"
+ *   RPC_PROXY_BASE_URL / RPC_PROXY_TOKEN / RPC_PROXY_CHAINS — if set and "Arc"
  *     is in CHAINS, uses the Arc Studio RPC proxy; otherwise falls back to the
- *     ARC_TESTNET_RPC_URL env var (set this in Vercel to the Arc Testnet public RPC).
+ *     ARC_MAINNET_RPC_URL env var or the public Arc mainnet endpoint.
  */
 
 import type { IncomingMessage, ServerResponse } from 'http'
@@ -21,22 +21,22 @@ import { request as httpsRequest } from 'https'
 // Config — all values from environment, never hardcoded
 // ---------------------------------------------------------------------------
 const REGISTRY = (process.env.VITE_METER_REGISTRY_ADDRESS ?? '').toLowerCase()
-const ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '0')
+const ENDPOINT_ID = BigInt(process.env.DEMO_ENDPOINT_ID ?? '1')
 
 const PROXY_BASE = process.env.RPC_PROXY_BASE_URL
 const PROXY_TOKEN = process.env.RPC_PROXY_TOKEN
 const PROXY_CHAINS = (process.env.RPC_PROXY_CHAINS ?? '').split(',')
-const PROXY_CHAIN_NAME = 'ArcTestnet'
+const PROXY_CHAIN_NAME = 'Arc'
 
 function getRpcUrl(): string {
   if (PROXY_BASE && PROXY_TOKEN && PROXY_CHAINS.includes(PROXY_CHAIN_NAME)) {
     return `${PROXY_BASE}/api/rpc/${PROXY_CHAIN_NAME}?_rpc_token=${PROXY_TOKEN}`
   }
-  // Fall back to env var set in Vercel dashboard (ARC_TESTNET_RPC_URL)
-  // or the documented Arc Testnet public endpoint from the onchain-facts registry.
+  // Fall back to env var set in Vercel dashboard (ARC_MAINNET_RPC_URL),
+  // then to the user-specified drpc endpoint, then the canonical Arc mainnet RPC.
   return (
-    process.env.ARC_TESTNET_RPC_URL ??
-    'https://rpc.testnet.arc.io' // arc-studio-allow-onchain-literal
+    process.env.ARC_MAINNET_RPC_URL ??
+    'https://rpc.drpc.mainnet.arc.io' // arc-studio-allow-onchain-literal
   )
 }
 

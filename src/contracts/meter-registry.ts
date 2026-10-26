@@ -1,10 +1,11 @@
 /**
  * MeterRegistry contract config.
- * Arc Testnet deployment: 0x63d52ea2f47b2db6edba7bb6f33c5abc1e81d2f9
+ * Arc Mainnet deployment: 0x423B8701Da3a251a3A3fc2d241b71e8d05744C91
+ * Arc Testnet deployment: 0x63d52ea2f47b2db6edba7bb6f33c5abc1e81d2f9 (legacy)
  */
 
-// Arc Testnet deployment (Oct 2026) — override via VITE_METER_REGISTRY_ADDRESS in .env
-const DEPLOYED_ADDRESS = '0x63d52ea2f47b2db6edba7bb6f33c5abc1e81d2f9' as const
+// Arc Mainnet deployment (Oct 2026) — override via VITE_METER_REGISTRY_ADDRESS in .env
+const DEPLOYED_ADDRESS = '0x423B8701Da3a251a3A3fc2d241b71e8d05744C91' as const
 
 export const METER_REGISTRY_ADDRESS: `0x${string}` =
   (import.meta.env.VITE_METER_REGISTRY_ADDRESS as `0x${string}` | undefined) ??
