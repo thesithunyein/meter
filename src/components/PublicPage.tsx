@@ -149,35 +149,53 @@ function EndpointCard({ id }: { id: bigint }) {
   }
 
   return (
-    <div className="bg-[var(--surface)] backdrop-blur-sm border border-[var(--border)] rounded-2xl p-5 space-y-3">
+    <div
+      className="backdrop-blur-sm rounded-2xl p-5 space-y-4 transition-all"
+      style={{
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.10)',
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
-            <h3 className="text-base font-semibold text-[var(--ink)] truncate">{name}</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <span
+              className={`w-2 h-2 rounded-full flex-shrink-0 ${active ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`}
+              style={active ? { boxShadow: '0 0 6px var(--success)' } : {}}
+            />
+            <h3 className="text-base font-semibold truncate" style={{ color: 'var(--ink)' }}>{name}</h3>
+            <span className="text-xs px-1.5 py-0.5 rounded font-mono flex-shrink-0"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--subtle)' }}>
+              #{id.toString()}
+            </span>
           </div>
-          <p className="text-xs text-[var(--muted)] truncate mt-0.5 font-mono">{url}</p>
+          <p className="text-xs truncate font-mono" style={{ color: 'var(--subtle)' }}>{url}</p>
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0 bg-[var(--surface-muted)] rounded-lg px-3 py-1.5">
+        <div
+          className="flex items-center gap-1.5 flex-shrink-0 rounded-xl px-3 py-2"
+          style={{ background: 'rgba(172,198,233,0.10)', border: '1px solid rgba(172,198,233,0.18)' }}
+        >
           <TokenUSDC size={14} variant="branded" />
-          <span className="text-sm font-bold tabular-nums text-[var(--ink)]">{formattedPrice}</span>
+          <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{formattedPrice}</span>
         </div>
       </div>
 
       {status.phase === 'done' && (
-        <div className="rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] p-3 space-y-2">
-          <div className="flex items-center gap-1.5 text-[var(--success)]">
+        <div className="rounded-xl p-4 space-y-3"
+          style={{ background: 'rgba(111,217,138,0.08)', border: '1px solid rgba(111,217,138,0.20)' }}>
+          <div className="flex items-center gap-1.5" style={{ color: 'var(--success)' }}>
             <CheckCircle size={14} />
-            <span className="text-xs font-semibold">Payment confirmed. Endpoint response:</span>
+            <span className="text-xs font-semibold">Payment confirmed — endpoint response:</span>
           </div>
-          <p className="text-sm text-[var(--ink)] leading-relaxed">
+          <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--ink)' }}>
             {parseResponse(status.response)}
           </p>
           <a
             href={buildTxExplorerUrl(TARGET_CHAIN_ID, status.hash)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium hover:underline"
+            style={{ color: 'var(--accent)' }}
           >
             <ExternalLink size={11} /> View on explorer
           </a>
@@ -185,9 +203,10 @@ function EndpointCard({ id }: { id: bigint }) {
       )}
 
       {status.phase === 'error' && (
-        <div className="rounded-xl bg-red-50 border border-red-200 p-3 flex gap-2">
-          <AlertCircle size={14} className="text-[var(--danger)] flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-[var(--danger)]">{status.message}</p>
+        <div className="rounded-xl p-3 flex gap-2"
+          style={{ background: 'rgba(232,109,122,0.10)', border: '1px solid rgba(232,109,122,0.25)' }}>
+          <AlertCircle size={14} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
+          <p className="text-xs" style={{ color: 'var(--danger)' }}>{status.message}</p>
         </div>
       )}
 
@@ -203,7 +222,12 @@ function EndpointCard({ id }: { id: bigint }) {
           !active ||
           (isConnected && status.phase !== 'idle' && status.phase !== 'done' && status.phase !== 'error')
         }
-        className="w-full py-2.5 rounded-xl bg-[var(--accent)] text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--accent-hover)] transition-colors"
+        className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        style={{
+          background: active ? 'rgba(172,198,233,0.15)' : 'rgba(255,255,255,0.04)',
+          border: active ? '1px solid rgba(172,198,233,0.30)' : '1px solid rgba(255,255,255,0.08)',
+          color: active ? 'var(--accent)' : 'var(--subtle)',
+        }}
       >
         {status.phase === 'approving' && <><Loader2 size={14} className="animate-spin" /> Approve USDC...</>}
         {status.phase === 'paying' && <><Loader2 size={14} className="animate-spin" /> Confirm payment...</>}
@@ -236,23 +260,22 @@ export default function PublicPage() {
     : []
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[var(--ink)] display">All Endpoints</h2>
-          <span className="text-xs text-[var(--muted)] tabular-nums bg-[var(--surface-muted)] px-2.5 py-1 rounded-full">
-            {ids.length} registered
-          </span>
-        </div>
-        <p className="text-sm text-[var(--muted)]">
-          Pay USDC per API call. Any endpoint, any price, settled onchain.
-        </p>
+    <div className="px-6 py-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold display" style={{ color: 'var(--ink)' }}>All Endpoints</h2>
+        <span
+          className="text-xs tabular-nums px-2.5 py-1 rounded-full"
+          style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted)', border: '1px solid var(--border)' }}
+        >
+          {ids.length} registered
+        </span>
       </div>
 
       {!IS_CONTRACT_DEPLOYED && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex gap-2">
-          <AlertCircle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-700">
+        <div className="rounded-xl px-4 py-3 flex gap-2"
+          style={{ background: 'rgba(232,172,50,0.08)', border: '1px solid rgba(232,172,50,0.25)' }}>
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" style={{ color: '#e8ac32' }} />
+          <p className="text-xs" style={{ color: '#e8ac32' }}>
             Contract not deployed yet. Set <code className="font-mono">VITE_METER_REGISTRY_ADDRESS</code> after deployment.
           </p>
         </div>
@@ -261,18 +284,19 @@ export default function PublicPage() {
       {endpointCount === undefined && IS_CONTRACT_DEPLOYED && (
         <div className="space-y-3">
           {([0, 1] as const).map(i => (
-            <div key={i} className="h-24 rounded-2xl bg-[var(--surface-muted)] animate-pulse" />
+            <div key={i} className="h-24 rounded-2xl animate-pulse"
+              style={{ background: 'rgba(255,255,255,0.04)' }} />
           ))}
         </div>
       )}
 
       {endpointCount !== undefined && ids.length === 0 && IS_CONTRACT_DEPLOYED && (
-        <div className="text-center py-12 text-[var(--muted)] text-sm">
+        <div className="text-center py-12 text-sm" style={{ color: 'var(--muted)' }}>
           No endpoints registered yet.
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {ids.map(id => (
           <EndpointCard key={id.toString()} id={id} />
         ))}

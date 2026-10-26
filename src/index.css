@@ -3,22 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --bg: #ffffff;
-  --bg-gradient: linear-gradient(180deg, #f9f9fc 0%, #fffcf7 52%, #fbf7f2 100%);
-  --surface: rgba(255, 255, 255, 0.72);
-  --surface-strong: rgba(255, 255, 255, 0.90);
-  --surface-muted: #f5f5f8;
-  --ink: #122d45;
-  --ink-2: #334155;
-  --muted: #6b6580;
-  --subtle: #8a849c;
-  --border: rgba(18, 45, 69, 0.12);
-  --border-strong: rgba(25, 53, 77, 0.50);
-  --accent: #122d45;
-  --accent-hover: #1061a6;
+  --bg: #080e1a;
+  --bg-gradient: linear-gradient(180deg, #080e1a 0%, #0c1525 60%, #0f1d35 100%);
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-strong: rgba(255, 255, 255, 0.10);
+  --surface-muted: rgba(255, 255, 255, 0.04);
+  --ink: #f1f5fd;
+  --ink-2: #cdd9f0;
+  --muted: #8fa3bf;
+  --subtle: #5c7494;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(172, 198, 233, 0.40);
+  --accent: #acc6e9;
+  --accent-hover: #cbdbf2;
   --focus: #85b1ed;
-  --success: #1a8047;
-  --danger: #ba2b4c;
+  --success: #6fd98a;
+  --danger: #e86d7a;
 }
 
 * {
@@ -29,8 +29,29 @@ body {
   margin: 0;
   font-family: 'DM Sans', sans-serif;
   min-height: 100dvh;
-  background: var(--bg-gradient);
+  background: var(--bg);
   color: var(--ink);
+}
+
+/* Video hero overlay */
+.video-hero {
+  position: relative;
+  overflow: hidden;
+}
+.video-hero video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.35;
+  pointer-events: none;
+}
+.video-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,14,26,0.15) 0%, rgba(8,14,26,0.55) 70%, rgba(8,14,26,1) 100%);
+  pointer-events: none;
 }
 
 .display {

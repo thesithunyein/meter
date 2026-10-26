@@ -108,26 +108,28 @@ export default function LiveFeed() {
   }, [])
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
       <div className="flex items-center gap-2">
-        <Activity size={18} className="text-[var(--accent)]" />
-        <h2 className="text-lg font-semibold text-[var(--ink)] display">Live Feed</h2>
+        <Activity size={18} style={{ color: 'var(--accent)' }} />
+        <h2 className="text-lg font-semibold display" style={{ color: 'var(--ink)' }}>Live Feed</h2>
         {!loading && IS_CONTRACT_DEPLOYED && (
-          <span className="ml-auto flex items-center gap-1.5 text-xs text-[var(--success)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+          <span className="ml-auto flex items-center gap-1.5 text-xs" style={{ color: 'var(--success)' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--success)' }} />
             Live
           </span>
         )}
       </div>
 
       {!IS_CONTRACT_DEPLOYED && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+        <div className="rounded-xl px-4 py-3 text-xs"
+          style={{ background: 'rgba(232,172,50,0.08)', border: '1px solid rgba(232,172,50,0.25)', color: '#e8ac32' }}>
           Contract not deployed yet. Set <code className="font-mono">VITE_METER_REGISTRY_ADDRESS</code> after deployment.
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-xs text-[var(--danger)]">
+        <div className="rounded-xl px-4 py-3 text-xs"
+          style={{ background: 'rgba(232,109,122,0.10)', border: '1px solid rgba(232,109,122,0.25)', color: 'var(--danger)' }}>
           {error}
         </div>
       )}
@@ -135,7 +137,8 @@ export default function LiveFeed() {
       {loading && IS_CONTRACT_DEPLOYED && (
         <div className="space-y-2">
           {([0, 1, 2, 3] as const).map(i => (
-            <div key={i} className="h-16 rounded-xl bg-[var(--surface-muted)] animate-pulse" />
+            <div key={i} className="h-16 rounded-xl animate-pulse"
+              style={{ background: 'rgba(255,255,255,0.04)' }} />
           ))}
         </div>
       )}
@@ -156,25 +159,27 @@ export default function LiveFeed() {
         {events.map((ev, i) => (
           <div
             key={`${ev.txHash}-${i}`}
-            className="bg-[var(--surface)] backdrop-blur-sm border border-[var(--border)] rounded-xl px-4 py-3 flex items-center gap-3"
+            className="backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
           >
             <div className="flex-1 min-w-0 space-y-0.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-[var(--ink-2)]">{formatAddress(ev.caller)}</span>
-                <span className="text-xs text-[var(--subtle)]">called</span>
-                <span className="text-xs font-semibold text-[var(--ink)] bg-[var(--surface-muted)] px-1.5 py-0.5 rounded">
+                <span className="text-xs font-mono" style={{ color: 'var(--ink-2)' }}>{formatAddress(ev.caller)}</span>
+                <span className="text-xs" style={{ color: 'var(--subtle)' }}>called</span>
+                <span className="text-xs font-semibold px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(172,198,233,0.10)', color: 'var(--accent)' }}>
                   #{ev.endpointId.toString()}
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-[var(--subtle)]">{timeAgo(ev.timestamp)}</span>
-                <span className="text-xs text-[var(--subtle)]">·</span>
-                <span className="text-xs text-[var(--subtle)]">nonce {ev.nonce.toString()}</span>
+                <span className="text-xs" style={{ color: 'var(--subtle)' }}>{timeAgo(ev.timestamp)}</span>
+                <span className="text-xs" style={{ color: 'var(--subtle)' }}>·</span>
+                <span className="text-xs" style={{ color: 'var(--subtle)' }}>nonce {ev.nonce.toString()}</span>
               </div>
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               <TokenUSDC size={13} variant="branded" />
-              <span className="text-sm font-bold tabular-nums text-[var(--ink)]">
+              <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--accent)' }}>
                 {Amount.fromRaw(ev.amount, 6).toFixed(4)}
               </span>
             </div>
@@ -182,7 +187,8 @@ export default function LiveFeed() {
               href={buildTxExplorerUrl(TARGET_CHAIN_ID, ev.txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--muted)] hover:text-[var(--accent)] transition-colors"
+              className="transition-colors"
+              style={{ color: 'var(--subtle)' }}
             >
               <ExternalLink size={13} />
             </a>
