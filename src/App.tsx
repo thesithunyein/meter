@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ConnectKitButton } from 'connectkit'
-import { Globe, Gauge, Activity, Zap, Home } from 'lucide-react'
+import { Globe, Gauge, Activity, Zap, Home, ChevronDown } from 'lucide-react'
 import ProviderPage from './components/ProviderPage'
 import PublicPage from './components/PublicPage'
 import LiveFeed from './components/LiveFeed'
@@ -25,7 +25,7 @@ export default function App() {
   return (
     <div className="min-h-dvh" style={{ background: 'var(--bg)' }}>
       {/* ── Video hero ── */}
-      <div className="video-hero" style={{ height: tab === 'home' ? '520px' : '320px' }}>
+      <div className="video-hero" style={{ height: tab === 'home' ? '600px' : '320px' }}>
         <video
           src={VIDEO_URL}
           autoPlay
@@ -70,11 +70,48 @@ export default function App() {
               <span style={{ color: 'var(--accent)' }}>API Gateway</span>
             </h1>
 
-            <p className="text-base max-w-sm" style={{ color: 'var(--muted)' }}>
+            <p className="text-base max-w-sm mb-8" style={{ color: 'var(--muted)' }}>
               Any endpoint, any price, settled onchain with USDC.
               <br />
               The contract is the auth layer.
             </p>
+
+            {/* CTA buttons — directly under subline */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setTab('public')}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+                style={{
+                  background: 'linear-gradient(135deg, #5B8DEF 0%, #38BDF8 60%, #22D3EE 100%)',
+                  color: '#080e1a',
+                  boxShadow: '0 0 20px rgba(56,189,248,0.35)',
+                }}
+              >
+                <Zap size={14} /> Get Started
+              </button>
+              <button
+                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
+                style={{
+                  background: 'rgba(172,198,233,0.08)',
+                  border: '1px solid rgba(172,198,233,0.22)',
+                  color: 'var(--ink)',
+                }}
+              >
+                <ChevronDown size={14} /> How It Works
+              </button>
+              <button
+                onClick={() => setTab('public')}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-70 active:scale-95"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(172,198,233,0.15)',
+                  color: 'var(--subtle)',
+                }}
+              >
+                <Globe size={14} /> Browse Endpoints
+              </button>
+            </div>
           </div>
         )}
 

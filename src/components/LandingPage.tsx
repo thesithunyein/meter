@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Zap, Shield, Globe, Activity, Code2, DollarSign } from 'lucide-react'
+// ChevronDown used in FAQ accordion; Zap, Globe, Code2 used in sections below
 
 interface LandingPageProps {
   onNavigate: (tab: 'public' | 'provider' | 'feed') => void
@@ -71,46 +72,6 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
 
   return (
     <div>
-      {/* ── CTA row ── */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-20 flex flex-col sm:flex-row gap-4">
-        {/* Get Started — primary */}
-        <button
-          onClick={() => onNavigate('public')}
-          className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-          style={{
-            background: 'linear-gradient(135deg, #5B8DEF 0%, #38BDF8 60%, #22D3EE 100%)',
-            color: '#080e1a',
-            boxShadow: '0 0 20px rgba(56,189,248,0.35)',
-          }}
-        >
-          <Zap size={15} /> Get Started
-        </button>
-        {/* How It Works — scrolls down */}
-        <button
-          onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-          className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
-          style={{
-            background: 'rgba(172,198,233,0.08)',
-            border: '1px solid rgba(172,198,233,0.22)',
-            color: 'var(--ink)',
-          }}
-        >
-          <ChevronDown size={15} /> How It Works
-        </button>
-        {/* Browse Endpoints — glass */}
-        <button
-          onClick={() => onNavigate('public')}
-          className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 active:scale-95"
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(172,198,233,0.15)',
-            color: 'var(--subtle)',
-          }}
-        >
-          <Globe size={15} /> Browse Endpoints
-        </button>
-      </section>
-
       {/* ── Features grid ── */}
       <section
         className="py-20"
