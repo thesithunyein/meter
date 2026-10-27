@@ -1,111 +1,111 @@
 <div align="center">
 
-<img src="public/logo.svg" alt="Meter" width="120" />
+<img src="public/logo.svg" alt="Meter" width="96" />
 
 # Meter
 
-**Pay-per-call API gateway — USDC settles every request, onchain.**
+**Pay-per-call API gateway. USDC settles every request. The contract is the auth layer.**
 
 [![Live](https://img.shields.io/badge/live-getmeter.vercel.app-22D3EE?style=flat-square&logo=vercel&logoColor=white)](https://getmeter.vercel.app)
-[![Contract](https://img.shields.io/badge/contract-Arc%20Mainnet-5B8DEF?style=flat-square)](https://explorer.arc.io/address/0x423B8701Da3a251a3A3fc2d241b71e8d05744C91)
+[![Contract](https://img.shields.io/badge/Arc%20Mainnet-0x423B...4C91-5B8DEF?style=flat-square)](https://explorer.arc.io/address/0x423B8701Da3a251a3A3fc2d241b71e8d05744C91)
+[![Tests](https://img.shields.io/badge/tests-22%2F22-22c55e?style=flat-square)](contracts/test/MeterRegistry.t.sol)
 [![Solidity](https://img.shields.io/badge/solidity-%5E0.8.28-363636?style=flat-square&logo=solidity)](contracts/MeterRegistry.sol)
-[![Tests](https://img.shields.io/badge/tests-22%2F22%20passing-22c55e?style=flat-square&logo=checkmarx&logoColor=white)](contracts/test/MeterRegistry.t.sol)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-
-Built with [Arc Studio](https://studio.arc.io)
 
 </div>
 
 ---
 
-## Overview
+## What it does
 
-Meter is a permissionless, onchain API marketplace. Any HTTP endpoint can be monetized with a USDC price. Callers pay per request — the smart contract is the auth layer. No API keys. No accounts. No billing portals.
+Meter lets any HTTP endpoint charge per call in USDC — no API keys, no accounts, no billing infrastructure. A provider registers their endpoint onchain with a price. A caller approves USDC, calls `pay()`, and passes the transaction hash as proof of payment. The endpoint verifies the `Paid` event onchain and responds.
+
+USDC flows **directly from caller to provider** in a single transaction. The contract never holds funds.
 
 ```
 Provider                  MeterRegistry                  Caller
    │                           │                            │
    │── register(name,url,price)──▶│                            │
    │◀──── endpointId ────────────│                            │
-   │                           │                            │
    │                           │◀── approve(registry, price) ──│
    │                           │◀────── pay(endpointId) ───────│
    │◀────────── USDC ───────────│                            │
    │                           │────── emit Paid(tx) ──────▶│
-   │                           │                            │
-   │◀── GET /url { x-payment-tx: txHash } ─────────────────│
-   │────────────── response ───────────────────────────────▶│
+   │◀── GET /url  { x-payment-tx: txHash } ────────────────│
+   │────────────── 200 response ───────────────────────────▶│
 ```
 
-USDC flows **directly from caller to provider** in a single transaction. The contract never holds funds.
+---
+
+## Live on Arc Mainnet
+
+| | |
+|---|---|
+| **Contract** | [`0x423B8701Da3a251a3A3fc2d241b71e8d05744C91`](https://explorer.arc.io/address/0x423B8701Da3a251a3A3fc2d241b71e8d05744C91) |
+| **Network** | Arc Mainnet — chain ID `5042` |
+| **USDC** | [`0x3600000000000000000000000000000000000000`](https://explorer.arc.io/address/0x3600000000000000000000000000000000000000) |
+| **First payment tx** | [`0x14877...b5a5`](https://explorer.arc.io/tx/0x1487799a93150e66c0a70e6072fefabd4a935b4d9d3f3da95d4faa68e5f6b5a5) |
+| **Demo endpoint** | ID `1` — "random fact" — 0.01 USDC/call |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    getmeter.vercel.app               │
-│                                                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────┐ │
-│  │  Landing     │  │  Endpoints   │  │  My APIs  │ │
-│  │  Page        │  │  (PublicPage)│  │ (Provider)│ │
-│  └──────────────┘  └──────┬───────┘  └─────┬─────┘ │
-│                           │                │        │
-│  ┌────────────────────────▼────────────────▼──────┐ │
-│  │           wagmi v2 + ConnectKit (EVM wallet)   │ │
-│  └────────────────────────┬───────────────────────┘ │
-│                           │                         │
-│  ┌────────────────────────▼───────────────────────┐ │
-│  │         Vercel Serverless  /api/fact            │ │
-│  │   • verifies x-payment-tx against Arc mainnet  │ │
-│  │   • blocks replay attacks per txHash+caller    │ │
-│  │   • returns response on valid payment proof    │ │
-│  └────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────┘
-                           │
-         ┌─────────────────▼─────────────────┐
-         │   MeterRegistry.sol — Arc Mainnet  │
-         │   0x423B8701...4C91                │
-         │                                   │
-         │  register(name, url, price)        │
-         │  pay(endpointId)                   │
-         │  deactivate(endpointId)            │
-         │                                   │
-         │  event Registered(...)             │
-         │  event Paid(caller, id, amt, nonce)│
-         └───────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    getmeter.vercel.app                       │
+│                                                             │
+│  Landing Page  │  Endpoints  │  My APIs  │  Live Feed       │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │         wagmi v2 + ConnectKit — EVM browser wallet  │   │
+│  └──────────────────────────┬──────────────────────────┘   │
+│                             │                               │
+│  ┌──────────────────────────▼──────────────────────────┐   │
+│  │         Vercel Serverless Function  /api/fact        │   │
+│  │  • eth_getTransactionReceipt via Arc mainnet RPC     │   │
+│  │  • verifies Paid(caller, endpointId, amount, nonce)  │   │
+│  │  • blocks replay: one txHash per endpoint per caller │   │
+│  │  • zero external dependencies — Node built-ins only  │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                             │
+           ┌─────────────────▼──────────────────┐
+           │    MeterRegistry.sol — Arc Mainnet  │
+           │                                    │
+           │  register(name, url, price)         │
+           │  pay(endpointId)                    │
+           │  deactivate(endpointId)             │
+           │                                    │
+           │  event Registered(...)              │
+           │  event Paid(caller,id,amount,nonce) │
+           │  event Deactivated(...)             │
+           └────────────────────────────────────┘
 ```
 
-### Key design decisions
+### Design decisions
 
 | Decision | Rationale |
 |---|---|
 | No fund custody | USDC transfers directly caller → provider via `transferFrom`. Zero protocol risk. |
-| No owner / admin | Fully immutable after deploy. No rug vector, no upgrade key. |
-| `active` flag on endpoints | Allows providers to disable listings if their address is blocklisted by Circle. |
-| Nonce per endpoint | Each `Paid` event carries an incrementing nonce — uniquely identifies each call within an endpoint's history. |
-| Serverless payment gate | `/api/fact` reads the `Paid` event from Arc mainnet via raw JSON-RPC. No Node dependencies — zero cold-start bundling issues on Vercel. |
+| No owner / admin | Fully immutable after deploy. No upgrade key, no rug vector. |
+| `active` flag | Providers can disable a listing if their address is Circle-blocklisted. |
+| Nonce per endpoint | Each `Paid` event carries an incrementing nonce — unique call identifier within an endpoint's history. |
+| Zero-dependency serverless | `/api/fact` uses only Node `https` built-in. No cold-start bundling issues on Vercel. |
 
 ---
 
-## Smart Contract
-
-**Address:** [`0x423B8701Da3a251a3A3fc2d241b71e8d05744C91`](https://explorer.arc.io/address/0x423B8701Da3a251a3A3fc2d241b71e8d05744C91)
-**Network:** Arc Mainnet (chain ID `5042`)
-**USDC:** [`0x3600000000000000000000000000000000000000`](https://explorer.arc.io/address/0x3600000000000000000000000000000000000000)
-
-### Interface
+## Contract interface
 
 ```solidity
-// Register an endpoint
+// Register a new endpoint
 function register(
     string calldata name,
     string calldata url,
-    uint256 price          // USDC amount in 6-decimal units
+    uint256 price          // USDC — 6 decimals (e.g. 10000 = 0.01 USDC)
 ) external returns (uint256 endpointId);
 
-// Pay for a call — transfers USDC caller → provider
+// Pay for a call — transfers USDC caller → provider atomically
 function pay(uint256 endpointId) external;
 
 // Provider disables their own endpoint
@@ -119,65 +119,56 @@ event Deactivated(address indexed provider, uint256 indexed endpointId);
 
 ### Custom errors
 
-| Error | When |
+| Error | Condition |
 |---|---|
-| `ZeroPrice()` | `register()` called with `price == 0` |
-| `ZeroAddress()` | Constructor called with zero USDC address |
-| `EndpointNotFound()` | `pay()` / `deactivate()` called with out-of-range ID |
-| `EndpointInactive()` | `pay()` called on a deactivated endpoint |
-| `NotProvider()` | `deactivate()` called by non-provider |
+| `ZeroPrice()` | `register()` with `price == 0` |
+| `ZeroAddress()` | Constructor with zero USDC address |
+| `EndpointNotFound()` | ID out of range |
+| `EndpointInactive()` | `pay()` on a deactivated endpoint |
+| `NotProvider()` | `deactivate()` by non-provider |
 | `PaymentFailed()` | `transferFrom` returned `false` |
 
 ---
 
-## Endpoint Payment Flow (callers)
+## Caller integration
 
 ```typescript
-// 1. Approve USDC once (or per-call for tighter allowances)
+// 1. Approve USDC spend once (or per-call)
 await walletClient.writeContract({
-  address: USDC,
+  address: '0x3600000000000000000000000000000000000000',  // USDC on Arc
   abi: erc20Abi,
   functionName: 'approve',
-  args: [METER_REGISTRY, price],
+  args: ['0x423B8701Da3a251a3A3fc2d241b71e8d05744C91', price],
 })
 
-// 2. Pay — USDC moves in this tx
+// 2. Pay — USDC moves in this single tx
 const txHash = await walletClient.writeContract({
-  address: METER_REGISTRY,
+  address: '0x423B8701Da3a251a3A3fc2d241b71e8d05744C91',
   abi: meterRegistryAbi,
   functionName: 'pay',
   args: [endpointId],
 })
 
-// 3. Call the endpoint with tx hash as proof
+// 3. Call the endpoint — tx hash is the payment proof
 const res = await fetch(endpointUrl, {
   headers: { 'x-payment-tx': txHash },
 })
-const data = await res.json()
 ```
 
----
-
-## Endpoint Payment Gate (providers)
-
-To protect your endpoint, verify the `Paid` event onchain before responding:
+## Provider payment gate
 
 ```typescript
-// Verify payment — pseudocode; see api/fact.ts for full Node built-ins implementation
-async function verifyPayment(txHash: string, endpointId: number, expectedCaller: string) {
-  const receipt = await rpc('eth_getTransactionReceipt', [txHash])
-  const paidTopic = keccak256('Paid(address,uint256,uint256,uint256)')
+// Minimal onchain verification — see api/fact.ts for full implementation
+const receipt = await rpc('eth_getTransactionReceipt', [txHash])
+const PAID_TOPIC = '0x...' // keccak256('Paid(address,uint256,uint256,uint256)')
 
-  const log = receipt.logs.find(l =>
-    l.address.toLowerCase() === METER_REGISTRY.toLowerCase() &&
-    l.topics[0] === paidTopic &&
-    BigInt(l.topics[2]) === BigInt(endpointId) &&
-    l.topics[1].endsWith(expectedCaller.slice(2).toLowerCase())
-  )
+const log = receipt.logs.find(l =>
+  l.address.toLowerCase() === METER_REGISTRY.toLowerCase() &&
+  l.topics[0] === PAID_TOPIC &&
+  BigInt(l.topics[2]) === BigInt(endpointId)
+)
 
-  if (!log) throw new Error('Payment not found')
-  return true
-}
+if (!log) return res.status(402).json({ error: 'Payment required' })
 ```
 
 ---
@@ -187,7 +178,7 @@ async function verifyPayment(txHash: string, endpointId: number, expectedCaller:
 ### Prerequisites
 
 - [Bun](https://bun.sh) ≥ 1.0
-- [Foundry](https://book.getfoundry.sh) (for contract work)
+- [Foundry](https://book.getfoundry.sh) for contract work
 - An EVM wallet with USDC on Arc Mainnet
 
 ### Install
@@ -198,57 +189,42 @@ cd meter
 bun install
 ```
 
-### Environment variables
-
-| Variable | Purpose | Required |
-|---|---|---|
-| `VITE_METER_REGISTRY_ADDRESS` | Deployed MeterRegistry contract address | Yes |
-| `DEMO_ENDPOINT_ID` | Endpoint ID for the `/api/fact` demo endpoint | Yes |
-| `RPC_PROXY_BASE_URL` | Arc Studio RPC proxy base URL | Optional (Arc Studio only) |
-| `RPC_PROXY_TOKEN` | Arc Studio RPC proxy token | Optional (Arc Studio only) |
-| `RPC_PROXY_CHAINS` | Comma-separated proxy chain keys | Optional (Arc Studio only) |
-
-Copy `.env.example` and fill in your values:
+### Environment
 
 ```bash
 cp .env.example .env
 ```
 
-### Run locally
+| Variable | Purpose |
+|---|---|
+| `VITE_METER_REGISTRY_ADDRESS` | MeterRegistry contract address |
+| `DEMO_ENDPOINT_ID` | Endpoint ID for the `/api/fact` demo |
+| `RPC_PROXY_BASE_URL` | RPC proxy base URL (Arc Studio only) |
+| `RPC_PROXY_TOKEN` | RPC proxy auth token (Arc Studio only) |
+| `RPC_PROXY_CHAINS` | Proxy chain keys, comma-separated (Arc Studio only) |
+
+### Run
 
 ```bash
-# Start the API server (port 3001)
-bun run server
+bun run server   # API server on :3001
+bun run dev      # Frontend on :5173
+```
 
-# Start the frontend dev server (port 5173)
-bun run dev
+### Test
+
+```bash
+forge test -v
+forge test --gas-report
 ```
 
 ### Build
 
 ```bash
 bun run build
+bun run check    # lint + typecheck
 ```
 
-### Test
-
-```bash
-# Run all Foundry tests
-forge test -v
-
-# Run with gas report
-forge test --gas-report
-```
-
-### Lint & typecheck
-
-```bash
-bun run check
-```
-
----
-
-## Deploying the contract
+### Deploy contract
 
 ```bash
 export PRIVATE_KEY=0x...
@@ -259,8 +235,6 @@ forge script contracts/script/DeployMeterRegistry.s.sol:DeployMeterRegistry \
   --private-key $PRIVATE_KEY
 ```
 
-After deploy, set `VITE_METER_REGISTRY_ADDRESS` in your environment and redeploy the frontend.
-
 ---
 
 ## Project structure
@@ -268,15 +242,15 @@ After deploy, set `VITE_METER_REGISTRY_ADDRESS` in your environment and redeploy
 ```
 meter/
 ├── api/
-│   └── fact.ts              # Vercel serverless function — payment-gated endpoint
+│   └── fact.ts                    # Vercel serverless — payment-gated endpoint
 ├── contracts/
-│   ├── MeterRegistry.sol    # Core registry contract
+│   ├── MeterRegistry.sol          # Core registry contract
 │   ├── script/
 │   │   └── DeployMeterRegistry.s.sol
 │   └── test/
-│       └── MeterRegistry.t.sol
+│       └── MeterRegistry.t.sol    # 22 Foundry tests + 256 fuzz runs
 ├── server/
-│   └── index.ts             # Bun dev server (local equivalent of /api/fact)
+│   └── index.ts                   # Bun dev server (local /api/fact)
 ├── src/
 │   ├── App.tsx
 │   ├── components/
@@ -287,11 +261,10 @@ meter/
 │   │   ├── MeterLogo.tsx
 │   │   ├── ProviderPage.tsx
 │   │   └── PublicPage.tsx
-│   ├── contracts/
-│   │   └── meter-registry.ts
-│   ├── onchain-facts.ts
-│   ├── onchain-money.ts
-│   └── onchain-wait.ts
+│   └── contracts/
+│       └── meter-registry.ts
+├── public/
+│   └── logo.svg
 └── vercel.json
 ```
 
@@ -299,12 +272,12 @@ meter/
 
 ## Contributing
 
-Pull requests are welcome. For substantial changes, open an issue first to discuss what you would like to change.
+Pull requests are welcome. For substantial changes, open an issue first.
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feat/your-feature`)
-3. Commit your changes (`git commit -m 'feat: add your feature'`)
-4. Push to the branch (`git push origin feat/your-feature`)
+2. Create a feature branch: `git checkout -b feat/your-feature`
+3. Commit: `git commit -m 'feat: describe the change'`
+4. Push: `git push origin feat/your-feature`
 5. Open a pull request
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
@@ -313,7 +286,7 @@ Please follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for the vulnerability disclosure policy.
+See [SECURITY.md](SECURITY.md) for the vulnerability disclosure policy and known design tradeoffs.
 
 ---
 
