@@ -22,17 +22,24 @@ Meter lets any HTTP endpoint charge per call in USDC — no API keys, no account
 
 USDC flows **directly from caller to provider** in a single transaction. The contract never holds funds.
 
-```
-Provider                  MeterRegistry                  Caller
-   │                           │                            │
-   │── register(name,url,price)──▶│                            │
-   │◀──── endpointId ────────────│                            │
-   │                           │◀── approve(registry, price) ──│
-   │                           │◀────── pay(endpointId) ───────│
-   │◀────────── USDC ───────────│                            │
-   │                           │────── emit Paid(tx) ──────▶│
-   │◀── GET /url  { x-payment-tx: txHash } ────────────────│
-   │────────────── 200 response ───────────────────────────▶│
+```mermaid
+sequenceDiagram
+    actor P as Provider
+    participant R as MeterRegistry
+    actor C as Caller
+    participant E as Endpoint /url
+
+    P->>R: register(name, url, price)
+    R-->>P: endpointId
+
+    C->>R: approve(registry, price) via USDC
+    C->>R: pay(endpointId)
+    R->>P: transferFrom — USDC direct
+    R-->>C: emit Paid(caller, endpointId, amount, nonce)
+
+    C->>E: GET /url  {x-payment-tx: txHash}
+    E->>R: eth_getTransactionReceipt — verify Paid event
+    E-->>C: 200 OK — response data
 ```
 
 ---
@@ -51,36 +58,38 @@ Provider                  MeterRegistry                  Caller
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    getmeter.vercel.app                       │
-│                                                             │
-│  Landing Page  │  Endpoints  │  My APIs  │  Live Feed       │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │         wagmi v2 + ConnectKit — EVM browser wallet  │   │
-│  └──────────────────────────┬──────────────────────────┘   │
-│                             │                               │
-│  ┌──────────────────────────▼──────────────────────────┐   │
-│  │         Vercel Serverless Function  /api/fact        │   │
-│  │  • eth_getTransactionReceipt via Arc mainnet RPC     │   │
-│  │  • verifies Paid(caller, endpointId, amount, nonce)  │   │
-│  │  • blocks replay: one txHash per endpoint per caller │   │
-│  │  • zero external dependencies — Node built-ins only  │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                             │
-           ┌─────────────────▼──────────────────┐
-           │    MeterRegistry.sol — Arc Mainnet  │
-           │                                    │
-           │  register(name, url, price)         │
-           │  pay(endpointId)                    │
-           │  deactivate(endpointId)             │
-           │                                    │
-           │  event Registered(...)              │
-           │  event Paid(caller,id,amount,nonce) │
-           │  event Deactivated(...)             │
-           └────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph FE["getmeter.vercel.app — React + wagmi v2"]
+        direction LR
+        LP[Landing Page]
+        EP[Endpoints]
+        MY[My APIs]
+        LF[Live Feed]
+    end
+
+    subgraph SV["Vercel Serverless — /api/fact"]
+        direction TB
+        RPC[eth_getTransactionReceipt]
+        VF[Verify Paid event]
+        RP[Replay protection\none txHash per caller]
+        RPC --> VF --> RP
+    end
+
+    subgraph SC["MeterRegistry.sol — Arc Mainnet 5042"]
+        direction TB
+        REG["register(name, url, price)"]
+        PAY["pay(endpointId)"]
+        DEA["deactivate(endpointId)"]
+        EVT["events: Registered · Paid · Deactivated"]
+    end
+
+    W([Browser Wallet\nMetaMask / EVM]) -->|approve + pay| SC
+    EP -->|reads endpointCount + endpoints| SC
+    LF -->|polls Paid events| SC
+    EP -->|POST x-payment-tx| SV
+    SV -->|eth_getTransactionReceipt| SC
+    SV -->|200 response| EP
 ```
 
 ### Design decisions
