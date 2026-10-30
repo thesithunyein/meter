@@ -51,8 +51,15 @@ sequenceDiagram
 | **Contract** | [`0x423B8701Da3a251a3A3fc2d241b71e8d05744C91`](https://explorer.arc.io/address/0x423B8701Da3a251a3A3fc2d241b71e8d05744C91) |
 | **Network** | Arc Mainnet — chain ID `5042` |
 | **USDC** | [`0x3600000000000000000000000000000000000000`](https://explorer.arc.io/address/0x3600000000000000000000000000000000000000) |
-| **First payment tx** | [`0x14877...b5a5`](https://explorer.arc.io/tx/0x1487799a93150e66c0a70e6072fefabd4a935b4d9d3f3da95d4faa68e5f6b5a5) |
+| **Example paid call** | [`0xb8af...8365`](https://explorer.arc.io/tx/0xb8af2aaabbbaab5b2ee0726527a45b0ed6a89807e8ceaf11bc8ecbba2abd8365) |
+| **Earlier paid call** | [`0x1487...b5a5`](https://explorer.arc.io/tx/0x1487799a93150e66c0a70e6072fefabd4a935b4d9d3fda95d4faa68e5f6b5a5) |
 | **Demo endpoint** | ID `1` — "random fact" — 0.01 USDC/call |
+
+---
+
+## Built with Arc Studio
+
+The contract, the 22 Foundry tests and the frontend were built in [Arc Studio](https://studio.arc.io/app/a91169b7-7e36-4c4e-a809-a2d6a7e12d27). The mainnet deploy and the endpoint registration were broadcast from a local terminal with the deploy key.
 
 ---
 
@@ -239,7 +246,7 @@ bun run check    # lint + typecheck
 export PRIVATE_KEY=0x...
 
 forge script contracts/script/DeployMeterRegistry.s.sol:DeployMeterRegistry \
-  --rpc-url https://rpc.mainnet.arc.io \
+  --rpc-url https://rpc.drpc.mainnet.arc.io \
   --broadcast \
   --private-key $PRIVATE_KEY
 ```
