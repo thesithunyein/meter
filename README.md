@@ -16,6 +16,8 @@
 
 ---
 
+[![Meter app screenshot](public/screenshot.png)](https://getmeter.vercel.app)
+
 ## What it does
 
 Meter lets any HTTP endpoint charge per call in USDC — no API keys, no accounts, no billing infrastructure. A provider registers their endpoint onchain with a price. A caller approves USDC, calls `pay()`, and passes the transaction hash as proof of payment. The endpoint verifies the `Paid` event onchain and responds.
